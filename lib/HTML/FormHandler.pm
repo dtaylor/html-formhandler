@@ -247,7 +247,7 @@ a database form) can be retrieved with C<< $form->value >>.
 
 =head3 params
 
-Parameters are passed in or already set when you call 'process'.
+Parameters are passed in or already set when you call process().
 HFH gets data to validate and store in the database from the params hash.
 If the params hash is empty, no validation is done, so it is not necessary
 to check for POST before calling C<< $form->process >>.
@@ -312,9 +312,9 @@ Or you can use the 'fif' method on individual fields:
 =head3 value
 
 Returns a hashref of all field values. Useful for non-database forms, or if
-you want to update the database yourself. The 'fif' method returns
+you want to update the database yourself. The fif() method returns
 a hashref with the field names for the keys and the field's 'fif' for the
-values; 'value' returns a hashref with the field accessors for the keys, and the
+values; value() returns a hashref with the field accessors for the keys, and the
 field's 'value' (possibly inflated) for the the values.
 
 Forms containing arrays to be processed with L<HTML::FormHandler::Field::Repeatable>
@@ -367,23 +367,23 @@ add fields to the form depending on some other state.
       return \@field_list;
    }
 
-=head3 active
+=head3 active / inactive
 
 If a form has a variable number of fields, fields which are not always to be
 used should be defined as 'inactive':
 
    has_field 'foo' => ( type => 'Text', inactive => 1 );
 
-Then the field name can be specified in the 'active' array, either on 'new',
-or on 'process':
+Then the field name can be specified in the 'active' array, in either new(),
+or process():
 
    my $form = MyApp::Form->new( active => ['foo'] );
    ...
    $form->process( active => ['foo'] );
 
-Fields specified as active on new will have the 'inactive' flag cleared, and so:
-those fields will be active for the life of the form object. Fields specified as
-active on 'process' will have the field's '_active' flag set just for the life of the
+Fields specified as active via new() will have the 'inactive' flag cleared and 
+will be active for the life of the form object. Fields specified as
+active via process() will have the field's '_active' flag set just for the life of the
 request.
 
 =head3 field_name_space

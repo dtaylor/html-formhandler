@@ -62,9 +62,9 @@ The rendering roles make it easy to integrate other types of templating.
 The form and fields rendering widgets will be automatically applied unless
 a 'render' method already exists, so if your form class applies a role like:
 
-   with 'HTML::FormHandler::Render::Simple';
+   with 'HTML::FormHandler::Render::MyRenderer';
 
-then L<HTML::FormHandler::Widget::Form::Simple'> will not be applied.
+then L<HTML::FormHandler::Render::Simple> will not be applied.
 
 The advantage of an all-in-one type role is that you can include all of
 your rendering code for a particular form in one file. You could even
@@ -115,13 +115,13 @@ set it to a different widget in your field declarations.
 
    has 'another_field' => ( widget => 'MyWidget', widget_wrapper => 'MyWrapper' ); 
 
-Can be set in the form:
+The following attributes can be set on a form:
 
    widget_name_space
    widget_wrapper
    widget_form
 
-Can be set in the field:
+The following attributes can be set on a field:
 
    widget_name_space
    widget_wrapper
