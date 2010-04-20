@@ -173,26 +173,30 @@ at L<HTML::FormHandler::Manual>.
 The new constructor takes name/value pairs:
 
     MyForm->new(
-        item    => $item,
+        item => $item,
     );
 
 No attributes are required on new. The form's fields will be built from
 the form definitions. If no initial data object has been provided, the form
 will be empty. Most attributes can be set on either 'new' or 'process'.
-The common attributes to be passed in to the constructor for a database form
+The common attributes passed to the constructor for a database form
 are either item_id and schema or item:
 
    item_id  - database row primary key
    item     - database row object
    schema   - (for DBIC) the DBIx::Class schema
 
+The common attributes passed to the constructor for a non-database form are
+init_object:
+
+    init_object - a hashref or object to provide initial values
+
 The following are occasionally passed in, but are more often set
 in the form class:
 
    item_class  - source name of row
    dependency  - (see dependency)
-   field_list  - and array of field definitions
-   init_object - a hashref or object to provide initial values
+   field_list  - an array of field definitions
 
 Examples of creating a form object with new:
 
@@ -200,6 +204,14 @@ Examples of creating a form object with new:
 
     # database form using a row object
     my $form = MyApp::Form::Member->new( item => $row );
+
+    # prefilling a non-database-based form
+    my $form = MyApp::Form::Member->new(
+        init_obj => {
+            name => 'John Doe',
+            email => 'john@example.com',
+        },
+    );
 
     # a dynamic form (no form class has been defined)
     my $form = HTML::FormHandler::Model::DBIC->new(
