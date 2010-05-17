@@ -4,12 +4,12 @@ use Test::More;
 use Test::Exception;
 use HTML::FormHandler::Field::Text;
 
-#use_ok('HTML::FormHandler::I18N');
-#use_ok('HTML::FormHandler::I18N::de_de');
+use lib ('t/lib');
 
 # ensure $ENV is properly set up
-delete $ENV{$_}
-    for qw(LANGUAGE_HANDLE HTTP_ACCEPT_LANGUAGE LANG LANGUAGE);
+my @LH_VARS = ('LANGUAGE_HANDLE', 'HTTP_ACCEPT_LANGUAGE', 'LANG', 'LANGUAGE' );
+my %LOC_ENV;
+$LOC_ENV{$_} = delete $ENV{$_} for @LH_VARS;
 
 # a primitive translation package
 {
@@ -37,6 +37,8 @@ my $form;
 
 
 ################ Locale -none-
+
+$ENV{LANGUAGE} = 'en-US';
 
 # create form w/o locale must work
 lives_ok { $form = Test::Form->new } 'create form w/o locale lives';
@@ -91,6 +93,32 @@ $form->field('test_field')->add_error('You won');
 is_deeply($form->field('test_field')->errors, ['You won'], 'error is translated into xx_xx');
 
 # translating a known label
-is($form->field('test_field')->label, 'Grfg svryq', 'label rot13 to xx_xx');
+is($form->field('test_field')->loc_label, 'Grfg svryq', 'label rot13 to xx_xx');
+
+# remove from environment variable, so we can use builder
+delete $ENV{LANGUAGE_HANDLE};
+{
+    package MyApp::Test::Form;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler';
+    use MyApp::I18N::abc_de;
+
+    sub _build_language_handle { MyApp::I18N::abc_de->new }
+    has_field 'foo';
+    has_field 'bar';
+    sub validate_foo {
+        my ( $self, $field ) = @_;
+        $field->add_error('You lost, insert coin');
+    }
+}
+
+$form = MyApp::Test::Form->new;
+
+ok( $form, 'form built' );
+$form->process( params => { foo => 'test' } );
+is( $form->field('foo')->errors->[0], 'Loser! coin needed', 'right message' );
+is( ref $form->language_handle, 'MyApp::I18N::abc_de', 'using right lh');
+
+$ENV{$_} = 'en-US' for @LH_VARS;
 
 done_testing;

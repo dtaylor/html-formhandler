@@ -2,7 +2,6 @@ package HTML::FormHandler::Field;
 
 use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
-use HTML::Entities;
 use Try::Tiny;
 
 with 'MooseX::Traits';
@@ -34,7 +33,7 @@ In your custom field class:
 
     has 'my_attribute' => ( isa => 'Str', is => 'rw' );
 
-    apply [ { transform => sub {...} },
+    apply [ { transform => sub { ... } },
             { check => ['fighter', 'bard', 'mage' ], message => '....' }
           ];
     1;
@@ -125,7 +124,7 @@ The name of the field with all parents:
 
    'event.start_date.month'
 
-=item full_accesor
+=item full_accessor
 
 The field accessor with all parents
 
@@ -364,7 +363,10 @@ Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to
 be executed on the field at validate_field time.
 
    has_field 'test' => (
-      apply => [ 'MooseType', { check => sub {...}, message => { } } ],
+      apply => [ 'MooseType', 
+                 { check => sub {...}, message => { } },
+                 { transform => sub { ... lc(shift) ... } } 
+               ],
    );
 
 In general the action can be of three types: a Moose type (which is
@@ -477,7 +479,7 @@ A 'check' regular expression:
 A 'check' array of valid values:
 
   has_field 'more_text' => (
-      aply => [ { check => ['aaa', 'bbb'], message => 'Must be aaa or bbb' } ]
+      apply => [ { check => ['aaa', 'bbb'], message => 'Must be aaa or bbb' } ]
   );
 
 A simple transformation uses the 'transform' keyword and a coderef.
@@ -567,6 +569,8 @@ has 'input_without_param' => (
 has 'not_nullable' => ( is => 'ro', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
 has 'default' => ( is => 'rw' );
+has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
+sub build_default_over_obj { }
 has 'result' => (
     isa       => 'HTML::FormHandler::Field::Result',
     is        => 'ro',
@@ -710,7 +714,11 @@ sub build_label {
     my $label = $self->name;
     $label =~ s/_/ /g;
     $label = ucfirst($label);
-    return $self->_localize($label);
+    return $label;
+}
+sub loc_label {
+    my $self = shift;
+    return $self->_localize($self->label);
 }
 has 'title'     => ( isa => 'Str',               is => 'rw' );
 has 'style'     => ( isa => 'Str',               is => 'rw' );
@@ -846,6 +854,37 @@ sub default_trim {
     }
     return ref $value eq 'ARRAY' ? \@values : $values[0];
 }
+has 'render_filter' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     builder => 'build_render_filter',
+     handles => { html_filter => 'execute' },
+);
+
+sub build_render_filter {
+    my $self = shift;
+    if( $self->form && $self->form->can('render_filter') ) {
+        return sub {
+            my $name = shift;
+            return $self->form->render_filter($name);
+        }
+    }
+    else {
+        return sub {
+            my $name = shift;
+            return $self->default_render_filter($name);
+        }  
+    }
+}
+sub default_render_filter {
+    my ( $self, $string ) = @_;
+    $string =~ s/&/&amp;/g;
+    $string =~ s/</&lt;/g;
+    $string =~ s/>/&gt;/g;
+    $string =~ s/"/&quot;/g;
+    return $string;
+}
 
 has 'input_param' => ( is => 'rw', isa => 'Str' );
 
@@ -864,6 +903,7 @@ sub BUILD {
 
     $self->_set_default( $self->_comp_default_meth )
         if( $self->form && $self->form->can( $self->_comp_default_meth ) );
+    $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
     # widgets will already have been applied by BuildFields, but this allows
     # testing individual fields
     $self->apply_rendering_widgets unless ($self->can('render') );
@@ -878,6 +918,9 @@ sub _result_from_fields {
     my ( $self, $result ) = @_;
 
     if ( my @values = $self->get_default_value ) {
+        if ( $self->_can_deflate ) {
+            @values = $self->_apply_deflation(@values);
+        }
         my $value = @values > 1 ? \@values : shift @values;
         $self->init_value($value)   if defined $value;
         $result->_set_value($value) if defined $value;
@@ -1043,9 +1086,6 @@ sub dump {
 sub apply_rendering_widgets {
     my $self = shift;
 
-    if( $self->form ) {
-        $self->add_widget_name_space( @{$self->form->widget_name_space} );
-    }
     if ( $self->widget ) {
         $self->apply_widget_role( $self, $self->widget, 'Field' );
     }

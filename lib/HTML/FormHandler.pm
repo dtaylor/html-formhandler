@@ -15,7 +15,8 @@ use HTML::FormHandler::Result;
 
 use 5.008;
 
-our $VERSION = '0.30003';
+# always use 5 digits after decimal because of toolchain issues
+our $VERSION = '0.31003';
 
 =head1 NAME
 
@@ -274,7 +275,7 @@ Params can either be in the form of CGI/HTTP style params:
       'addresses.0.country' => "UT",
       'addresses.0.address_id' => "1",
       'addresses.1.street' => "333 Valencia Street",
-      'addresses.1.city' => "San Franciso",
+      'addresses.1.city' => "San Francisco",
       'addresses.1.country' => "UT",
       'addresses.1.address_id' => "2",
    }

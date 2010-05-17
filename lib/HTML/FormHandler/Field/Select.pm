@@ -30,6 +30,10 @@ In a field declaration:
 
 In a custom field class:
 
+   package MyApp::Field::WeekDay;
+   use Moose;
+   extends 'HTML::FormHandler::Field::Select';
+   ....
    sub build_options {
        my $i = 0;
        my @days = ('Sunday', 'Monday', 'Tuesday', 'Wednesday',
@@ -43,6 +47,7 @@ In a custom field class:
 
 In a form:
 
+   has_field 'fruit' => ( type => 'Select' );
    sub options_fruit {
        return (
            1   => 'apples',
@@ -50,7 +55,11 @@ In a form:
            3   => 'kiwi',
        );
    }
-
+   -- or --
+   has 'options_fruit' => ( is => 'rw', traits => ['Array'],
+       default => sub { [1 => 'apples', 2 => 'oranges',
+           3 => 'kiwi'] } );
+ 
 Notice that, as a convenience, you can return a simple array (or arrayref) 
 for the options array in the 'options_field_name' method. The hashrefs with 
 'value' and 'label' keys will be constructed for you by FormHandler. The
@@ -229,7 +238,8 @@ sub _can_form_options {
 sub _form_options {
     my $self = shift;
     return unless (my $meth = $self->_can_form_options);
-    if( $self->form->meta->has_attribute( $meth ) ) {
+    my $attr = $self->form->meta->find_method_by_name( $meth );
+    if ( $attr and $attr->isa('Moose::Meta::Method::Accessor') ) {
         return $self->form->$meth;
     }
     else {

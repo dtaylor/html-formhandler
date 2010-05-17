@@ -1,3 +1,38 @@
+0.31003 Fri May 7, 2010
+    Change precedence of defaults over item/init_object; add 'default_over_obj' for
+       cases where that behavior is desired.
+    Fix errors in filtering HTML in rendering
+    Call deflation in InitResult::_result_from_obj
+    Split localization of labels into separate 'loc_label' method
+       Call loc_label where label is used in error messages
+    Enable empty strings for wrapper_start and wrapper_end
+    Set locale to en_us where needed in test
+    Fix widget_name_space use in fields
+
+0.31002 Wed Apr 21, 2010
+    Remove unused HTML::Entities from Simple form widget
+    Move locale test file into xt because of env variable issues in test
+
+0.31001 Tues Apr 20, 2010
+    Use full length version number
+    Updates to translated messages & messages in Validate::Actions
+
+0.31 Fri Apr 16, 2010
+    Remove use of HTML::Entities for filtering. New render_filter coderef for filering.
+    Minor doc fixes for typos
+    Use _html_attributes in widgets (for disabled, readonly, javascript)
+    Localize default required field message
+    Add 'render_upload' to Render::Simple
+    Fix allowing array for field_name_space
+    Selected_option for select lists
+    Add example to cookbook and tests for setting a coderef for validation
+    Checkbox group use 'eq' instead of '=='
+    Fixes to tutorial to match Catalyst tutorial
+    Allow arrayref for 'has_field' (like Moose 'has')
+    Die on maketext errors
+    Move deflation from fif to get_value called by '_result_from_object'.
+       Possible incompatibility, except it was probably not working to start with...
+    
 0.30003 Sun Feb 21, 2010
     Partial fix for lack of defaults for compound fields
     Support for using model_fields roles (DBICFields)
